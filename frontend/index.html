@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CloudSim Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root{--bg:#EDF0F2;--panel:#FAFBFC;--ink:#18232E;--mute:#5B6B7A;--line:#CBD3DA;--grid:#D9DFE4;--acc:#0B6E75;--bad:#C0392B;--warn:#A86B00;--ok:#2F7D54;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11181E;--panel:#192229;--ink:#E6ECF0;--mute:#8FA0AE;--line:#2C3943;--grid:#1D2830;--acc:#4FC3C9;--bad:#F0776A;--warn:#E3A93B;--ok:#6CCB95}}
+:root[data-theme="dark"]{--bg:#11181E;--panel:#192229;--ink:#E6ECF0;--mute:#8FA0AE;--line:#2C3943;--grid:#1D2830;--acc:#4FC3C9;--bad:#F0776A;--warn:#E3A93B;--ok:#6CCB95}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,sans-serif;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+h1{font-size:17px;margin:0;font-weight:600}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+button,select,input{font:inherit;color:var(--ink)}
+button,select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+button.on{background:var(--acc);border-color:var(--acc);color:var(--panel)}
+button:focus-visible,select:focus-visible,input:focus-visible,.node:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:150px 1fr 330px}
+#pal,#side{background:var(--panel);overflow:auto;padding:12px}
+#pal{border-right:1px solid var(--line)}#side{border-left:1px solid var(--line)}
+.pi{display:block;width:100%;text-align:left;margin:0 0 8px;border-left:5px solid var(--c);cursor:grab}
+.hint{color:var(--mute);font-size:12px}
+#canvas{overflow:auto;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+#stage{position:relative;width:920px;height:540px}
+#edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#edges line{stroke:var(--mute);stroke-width:2}#edges line.hl{stroke:var(--acc);stroke-width:3}
+.m0{fill:var(--mute)}.m1{fill:var(--acc)}
+.node{position:absolute;width:124px;height:56px;padding:6px 8px;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:6px;touch-action:none;user-select:none;cursor:grab;overflow:hidden}
+.node b{display:block;font-weight:600;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.node span{font-size:11px;color:var(--mute)}
+.node.sel{box-shadow:0 0 0 2px var(--acc)}.node.src{box-shadow:0 0 0 2px var(--warn)}
+.node.flag{border-color:var(--bad)}.node.fail{opacity:.55;border-style:dashed;background:repeating-linear-gradient(135deg,var(--panel) 0 6px,var(--line) 6px 7px)}
+nav{display:flex;gap:4px;margin-bottom:12px}nav button{flex:1;padding:6px 4px}
+label{display:block;margin:0 0 10px;color:var(--mute);font-size:12px}
+label input:not([type=checkbox]),label select{display:block;width:100%;margin-top:3px;padding:6px 8px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
+label.chk{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}
+.score{font-size:44px;font-weight:600;line-height:1}
+.f{padding:8px 0;border-top:1px solid var(--line)}
+.chip{display:inline-block;padding:0 7px;border-radius:9px;font-size:11px;color:#fff;margin-right:6px}
+.critical{background:#8E1B12}.high{background:var(--bad)}.medium{background:var(--warn)}.low{background:var(--mute)}
+.fix{color:var(--mute);font-size:12px}
+.good{color:var(--ok);margin:2px 0}.empty,.mute{color:var(--mute)}
+.stat{font-size:22px;font-weight:600}.up{color:var(--ok)}.degraded{color:var(--warn)}.down,.none{color:var(--bad)}
+.path{border:1px solid var(--line);border-radius:6px;padding:8px;margin:8px 0}.path.dead{opacity:.5}
+.hops{font:12px/1.8 "IBM Plex Mono",ui-monospace,monospace}.hops i{font-style:normal;color:var(--acc)}.hops em{font-style:normal;color:var(--mute)}
+.tot{font-weight:600;margin-top:4px}
+.log{font:12px/1.7 "IBM Plex Mono",ui-monospace,monospace;margin-top:10px}.log .e{color:var(--bad)}.log .s{color:var(--ok)}
+@media (max-width:820px){main{grid-template-columns:1fr;grid-template-rows:auto 56vh auto;overflow:auto}#pal{border-right:0;border-bottom:1px solid var(--line)}#side{border-left:0;border-top:1px solid var(--line)}.pi{display:inline-block;width:auto;margin-right:6px}}
+</style>
+</head>
+<body>
+<header>
+<h1>CloudSim Studio</h1>
+<div class="bar">
+<select id="pre" aria-label="Load example"><option value="">Load example</option><option value="insecure">Insecure setup</option><option value="secure">Secure setup</option><option value="multi">Multi-region setup</option></select>
+<button id="lk">Connect components</button><button id="del">Delete selected</button><button id="sv">Save to server</button><select id="sl" aria-label="Load saved"><option value="">Load saved</option></select>
+</div>
+</header>
+<main>
+<aside id="pal"><p class="hint">Drag onto the canvas, or tap to add.</p><div id="pi"></div></aside>
+<section id="canvas"><div id="stage"><svg id="edges"></svg></div></section>
+<aside id="side"><nav id="tabs"></nav><div id="pane"></div></aside>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const R=['mumbai','singapore','frankfurt','virginia'],SUB=['private','public'],IAM=['none','least_privilege','admin'];
+const rg=['region','Region','sel',R],lg=['logging','Logging','chk'];
+const T={
+internet:{label:'Internet',col:'#7A8794',f:[['region','Client region','sel',R]]},
+waf:{label:'WAF',col:'#B83280',f:[rg]},
+apigw:{label:'API Gateway',col:'#0B6E75',f:[rg,['auth','Authentication','sel',['none','jwt','api_key']],['rate','Rate limit per minute','num'],lg]},
+lb:{label:'Load Balancer',col:'#6C5CE7',f:[rg,['proto','Protocol','sel',['HTTPS','HTTP']]]},
+vm:{label:'VM',col:'#C77D0A',f:[rg,['public_ip','Public IP','chk'],['ssh_open','SSH open to 0.0.0.0/0','chk'],['subnet','Subnet','sel',SUB],['iam','IAM role','sel',IAM],lg]},
+db:{label:'Database',col:'#2F7D54',f:[rg,['public','Publicly accessible','chk'],['encrypted','Encrypted','chk'],['subnet','Subnet','sel',SUB],['iam','IAM role','sel',IAM],lg]}};
+const D={internet:{region:'mumbai'},waf:{region:'mumbai'},apigw:{region:'mumbai',auth:'none',rate:10,logging:false},lb:{region:'mumbai',proto:'HTTPS'},vm:{region:'mumbai',public_ip:false,ssh_open:false,subnet:'private',iam:'none',logging:false},db:{region:'mumbai',public:false,encrypted:false,subnet:'private',iam:'none',logging:false}};
+const LAT={mumbai:{mumbai:5,singapore:65,frankfurt:120,virginia:190},singapore:{singapore:5,frankfurt:140,virginia:215},frankfurt:{frankfurt:5,virginia:85},virginia:{virginia:5}};
+const lat=(a,b)=>LAT[a][b]??LAT[b][a],PROC={waf:1,apigw:3,lb:2,vm:10,db:20},W=124,H=56;
+const S={nodes:[],edges:[],sel:null,mode:false,from:null,hl:[],tab:'sec',hits:[],log:[]};let uid=1;
+const nb=id=>S.nodes.find(n=>n.id===id);
+function mk(type,x,y,o={}){const n={id:'n'+uid++,type,name:o.name||T[type].label,x,y,failed:false,c:{...D[type],...(o.c||{})}};S.nodes.push(n);return n}
+const link=(a,b)=>S.edges.push({from:a.id,to:b.id});
+const PRE={
+insecure(){const i=mk('internet',30,230),v=mk('vm',260,230,{name:'Web server',c:{public_ip:true,ssh_open:true,iam:'admin'}}),d=mk('db',490,230,{c:{public:true,subnet:'public'}});link(i,v);link(v,d)},
+secure(vr='mumbai',dr='mumbai'){const i=mk('internet',10,230),w=mk('waf',150,230),g=mk('apigw',290,230,{c:{auth:'jwt',logging:true}}),l=mk('lb',430,230),a=mk('vm',590,120,{name:'VM 1',c:{region:vr,iam:'least_privilege',logging:true}}),b=mk('vm',590,340,{name:'VM 2',c:{region:vr,iam:'least_privilege',logging:true}}),d=mk('db',765,230,{c:{region:dr,encrypted:true,iam:'least_privilege',logging:true}});link(i,w);link(w,g);link(g,l);link(l,a);link(l,b);link(a,d);link(b,d)},
+multi(){PRE.secure('singapore','frankfurt')}};
+function load(k){S.nodes=[];S.edges=[];uid=1;S.sel=null;S.from=null;S.log=[];S.hits=[];PRE[k]();refresh()}
+
+function paths(){const net=S.nodes.find(n=>n.type==='internet');if(!net)return[];const out=[];
+const go=(id,tr)=>{const nx=S.edges.filter(e=>e.from===id&&!tr.includes(e.to)).map(e=>e.to);if(!nx.length&&tr.length>1){out.push(tr);return}nx.forEach(t=>go(t,[...tr,t]))};go(net.id,[net.id]);
+return out.map(tr=>{const ns=tr.map(nb);let total=0;const hops=ns.slice(1).map((n,i)=>{const ms=lat(ns[i].c.region,n.c.region)+PROC[n.type];total+=ms;return{name:n.name,ms,failed:n.failed}});
+return{hops,total,alive:ns.every(n=>!n.failed),edges:tr.slice(1).map((t,i)=>tr[i]+'>'+t)}})}
+
+function sec(){return S.srv||secLocal()}
+function secLocal(){const F=[],G=[],N=S.nodes,E=S.edges;const add=(id,sev,n,m,fix)=>F.push({id,sev,n,msg:n.name+' '+m,fix});
+const vms=N.filter(n=>n.type==='vm'),net=N.find(n=>n.type==='internet'),hasLb=N.some(n=>n.type==='lb');
+N.filter(n=>n.type==='db').forEach(d=>{const direct=net&&E.some(e=>e.from===net.id&&e.to===d.id);
+if(d.c.public||direct)add('SEC-01','critical',d,'is reachable from the internet','Make it private and connect it only to application servers.');else G.push(d.name+' is not publicly reachable');
+if(!d.c.encrypted)add('SEC-05','medium',d,'stores data without encryption','Turn on encryption at rest.');else G.push(d.name+' is encrypted');
+if(d.c.subnet==='public')add('SEC-10','medium',d,'sits in a public subnet','Move it to a private subnet.')});
+vms.forEach(v=>{if(v.c.ssh_open)add('SEC-02','high',v,'allows SSH from anywhere','Restrict port 22 to a trusted address.');
+if(v.c.public_ip&&hasLb)add('SEC-03','medium',v,'has a public IP behind a load balancer','Remove the public IP so traffic goes through the load balancer.');
+if(v.c.subnet==='public')add('SEC-10','medium',v,'sits in a public subnet','Use a private subnet.')});
+N.filter(n=>n.type==='apigw').forEach(g=>{if(g.c.auth==='none')add('SEC-06','high',g,'accepts requests without authentication','Require JWT or an API key.');else G.push(g.name+' requires '+g.c.auth)});
+N.filter(n=>n.type==='lb'&&n.c.proto==='HTTP').forEach(l=>add('SEC-04','medium',l,'accepts unencrypted HTTP','Switch the protocol to HTTPS.'));
+N.filter(n=>n.c.iam==='admin').forEach(n=>add('SEC-07','high',n,'runs with an admin IAM role','Use a least-privilege role.'));
+N.filter(n=>'logging' in n.c&&!n.c.logging).slice(0,2).forEach(n=>add('SEC-08','low',n,'has logging turned off','Enable logging.'));
+if(vms.length===1)add('SEC-09','medium',vms[0],'is the only VM, a single point of failure','Add a second VM behind a load balancer.');else if(vms.length>1)G.push(vms.length+' VMs remove the single point of failure');
+const P={critical:30,high:20,medium:10,low:5},o=['critical','high','medium','low'];F.sort((a,b)=>o.indexOf(a.sev)-o.indexOf(b.sev));
+return{F,G,score:Math.max(0,100-F.reduce((s,f)=>s+P[f.sev],0))}}
+
+function drawNodes(){const st=$('#stage');st.querySelectorAll('.node').forEach(e=>e.remove());const bad=new Set(sec().F.map(f=>f.n.id));
+S.nodes.forEach(n=>{const d=document.createElement('div');d.className='node'+(S.sel===n.id?' sel':'')+(S.from===n.id?' src':'')+(bad.has(n.id)?' flag':'')+(n.failed?' fail':'');d.dataset.id=n.id;d.tabIndex=0;
+d.style.cssText=`left:${n.x}px;top:${n.y}px;--c:${T[n.type].col}`;d.innerHTML=`<b>${esc(n.name)}</b><span>${n.type==='internet'?'clients in ':''}${n.c.region}</span>`;st.appendChild(d)})}
+function drawEdges(){const m=Object.fromEntries(S.nodes.map(n=>[n.id,n]));
+$('#edges').innerHTML='<defs><marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="m0" d="M0 0L10 5L0 10z"/></marker><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="m1" d="M0 0L10 5L0 10z"/></marker></defs>'+
+S.edges.map(e=>{const a=m[e.from],b=m[e.to],ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,t=Math.min((W/2+4)/Math.abs(dx||1e-9),(H/2+4)/Math.abs(dy||1e-9)),h=S.hl.includes(e.from+'>'+e.to);
+return`<line class="${h?'hl':''}" x1="${ax+dx*t}" y1="${ay+dy*t}" x2="${bx-dx*t}" y2="${by-dy*t}" marker-end="url(#a${h?1:0})"/>`}).join('')}
+
+function cfg(){const n=nb(S.sel);if(!n)return'<p class="empty">Select a component on the canvas to edit it.</p>';
+let h=`<label>Name<input data-k="@name" value="${esc(n.name)}"></label>`;
+T[n.type].f.forEach(([k,l,t,o])=>{const v=n.c[k];h+=t==='chk'?`<label class="chk"><input type="checkbox" data-k="${k}" ${v?'checked':''}>${l}</label>`:t==='sel'?`<label>${l}<select data-k="${k}">${o.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select></label>`:`<label>${l}<input type="number" min="1" data-k="${k}" value="${v}"></label>`});
+return h+(n.type!=='internet'?`<button data-act="fail">${n.failed?'Restore':'Fail'} this component</button>`:'')}
+function secPane(){const r=sec(),c=r.score>=80?'ok':r.score>=50?'warn':'bad';
+let h=`<div class="score" style="color:var(--${c})">${r.score}<span class="mute" style="font-size:16px"> / 100</span></div><p class="mute">${r.F.length?r.F.length+' issues found. Affected components have a red outline.':'No issues found.'} ${S.srv?'Checked by the backend API.':'Checked in the browser (backend not connected).'}</p>`;
+r.F.forEach(f=>h+=`<div class="f"><span class="chip ${f.sev}">${f.sev}</span>${esc(f.msg)}<div class="fix">${f.id}${f.ref?" ("+esc(f.ref)+")":""}: ${f.fix}</div></div>`);
+if(r.G.length)h+='<div class="f"><b>Working well</b></div>'+r.G.map(g=>`<div class="good">✓ ${esc(g)}</div>`).join('');return h}
+function latPane(){const P=S.sim?S.sim.routes:paths(),al=P.filter(p=>p.alive).length,st=!P.length?'none':al===P.length?'up':al?'degraded':'down';
+let h=`<div class="stat ${st}">${{none:'No route',up:'Available',degraded:'Degraded',down:'Down'}[st]}</div>`;
+h+=P.length?`<p class="mute">${al} of ${P.length} routes working. Use Edit, then Fail this component, to test failures.</p>`:'<p class="empty">Connect the Internet to other components to create a route.</p>';
+P.forEach(p=>h+=`<div class="path ${p.alive?'':'dead'}"><div class="hops">${p.hops.map(x=>`<em>→</em> ${esc(x.name)} <i>${x.failed?'failed':x.ms+' ms'}</i>`).join(' ')}</div><div class="tot">${p.alive?p.total+' ms total':'Blocked'}</div></div>`);return h}
+function apiPane(){const g=S.nodes.find(n=>n.type==='apigw');
+return`<p class="mute">${g?`Gateway: ${esc(g.name)}, auth ${g.c.auth}, limit ${g.c.rate} per minute, methods GET and POST.`:'No API gateway. Requests go straight to the routes.'}</p>
+<label>Method<select id="mth"><option>GET</option><option>POST</option><option>DELETE</option></select></label><label class="chk"><input type="checkbox" id="tok">Send a valid token</label>
+<button data-act="send">Send request</button> <button data-act="burst">Send 15 requests</button><div class="log">${S.log.map(l=>`<div class="${l.ok?'s':'e'}">${esc(l.t)}</div>`).join('')||'<span class="mute">No requests yet.</span>'}</div>`}
+function send(){const g=S.nodes.find(n=>n.type==='apigw'),m=$('#mth').value,tok=$('#tok').checked,now=Date.now();S.hits=S.hits.filter(t=>now-t<6e4);let code,txt,ms='';
+if(g&&!['GET','POST'].includes(m)){code=405;txt='Method not allowed'}
+else if(g&&g.c.auth!=='none'&&!tok){code=401;txt='Unauthorized'}
+else{S.hits.push(now);if(g&&S.hits.length>g.c.rate){code=429;txt='Rate limit exceeded'}
+else{const al=paths().filter(p=>p.alive);if(!al.length){code=503;txt='No working route'}else{code=200;txt='OK';ms=' ('+Math.min(...al.map(p=>p.total))+' ms)'}}}
+S.log.unshift({ok:code===200,t:`${m} /users → ${code} ${txt}${ms}`});S.log=S.log.slice(0,14)}
+
+function panel(){const tabs=[['cfg','Edit'],['sec','Security'],['lat','Network'],['api','API']];
+$('#tabs').innerHTML=tabs.map(([k,l])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${l}</button>`).join('');
+S.hl=S.tab==='lat'?(S.sim?S.sim.routes:paths()).filter(p=>p.alive).flatMap(p=>p.edges):[];drawEdges();
+$('#pane').innerHTML={cfg,sec:secPane,lat:latPane,api:apiPane}[S.tab]()}
+function refresh(){S.srv=null;S.sim=null;drawNodes();panel();try{localStorage.setItem('cloudsim',JSON.stringify({nodes:S.nodes,edges:S.edges,uid}))}catch(e){}remote()}
+
+$('#pi').innerHTML=['waf','apigw','lb','vm','db'].map(t=>`<button class="pi" draggable="true" data-t="${t}" style="--c:${T[t].col}">${T[t].label}</button>`).join('');
+const add=(t,x,y)=>{const n=mk(t,Math.max(0,Math.min(796,x)),Math.max(0,Math.min(484,y)));S.sel=n.id;S.tab='cfg';refresh()};
+$('#pi').addEventListener('click',e=>{const b=e.target.closest('.pi');if(b)add(b.dataset.t,80+S.nodes.length*26%320,40+S.nodes.length*34%400)});
+$('#pi').addEventListener('dragstart',e=>e.dataTransfer.setData('t',e.target.dataset.t));
+$('#stage').addEventListener('dragover',e=>e.preventDefault());
+$('#stage').addEventListener('drop',e=>{e.preventDefault();const t=e.dataTransfer.getData('t'),r=$('#stage').getBoundingClientRect();if(T[t])add(t,e.clientX-r.left-W/2,e.clientY-r.top-H/2)});
+let drag=null;
+$('#stage').addEventListener('pointerdown',e=>{const el=e.target.closest('.node');if(!el)return;const n=nb(el.dataset.id);
+if(S.mode){if(!S.from)S.from=n.id;else if(S.from!==n.id){const i=S.edges.findIndex(x=>x.from===S.from&&x.to===n.id);if(i>=0)S.edges.splice(i,1);else if(n.type!=='internet')S.edges.push({from:S.from,to:n.id});S.from=null}refresh();return}
+S.sel=n.id;S.tab='cfg';drag={n,ox:e.clientX-n.x,oy:e.clientY-n.y};drawNodes();panel()});
+addEventListener('pointermove',e=>{if(!drag)return;const n=drag.n;n.x=Math.max(0,Math.min(796,e.clientX-drag.ox));n.y=Math.max(0,Math.min(484,e.clientY-drag.oy));const el=$(`.node[data-id="${n.id}"]`);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges()});
+addEventListener('pointerup',()=>{if(drag){drag=null;refresh()}});
+$('#lk').onclick=()=>{S.mode=!S.mode;S.from=null;$('#lk').classList.toggle('on',S.mode);$('#lk').textContent=S.mode?'Done connecting':'Connect components';drawNodes()};
+$('#del').onclick=()=>{if(!S.sel)return;S.nodes=S.nodes.filter(n=>n.id!==S.sel);S.edges=S.edges.filter(e=>e.from!==S.sel&&e.to!==S.sel);S.sel=null;refresh()};
+$('#pre').onchange=e=>{if(e.target.value)load(e.target.value);e.target.value=''};
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){S.tab=b.dataset.tab;panel()}});
+$('#pane').addEventListener('change',e=>{const n=nb(S.sel),k=e.target.dataset.k;if(!k||!n)return;const v=e.target.type==='checkbox'?e.target.checked:e.target.type==='number'?Math.max(1,+e.target.value||1):e.target.value;k==='@name'?n.name=v||n.name:n.c[k]=v;refresh()});
+const sendRemote=async(m,t)=>{try{return await api('request',{method:'POST',headers:J,body:JSON.stringify({model:{nodes:S.nodes,edges:S.edges},method:m,token:t})})}catch(e){return null}};
+$('#pane').addEventListener('click',async e=>{const a=e.target.dataset.act;if(!a)return;
+if(a==='fail'){const n=nb(S.sel);n.failed=!n.failed;refresh()}
+if(a==='send'||a==='burst'){const m=$('#mth').value,t=$('#tok').checked;for(let i=0;i<(a==='burst'?15:1);i++){const q=await sendRemote(m,t);if(q)S.log.unshift({ok:q.code===200,t:`${m} /users → ${q.code} ${q.text}${q.ms?' ('+q.ms+' ms)':''}`});else send()}S.log=S.log.slice(0,14);panel();$('#mth').value=m;$('#tok').checked=t}});
+const api=(p,o)=>fetch('/api/'+p,o).then(x=>{if(!x.ok)throw 0;return x.json()}),J={'Content-Type':'application/json'};
+let seq=0;
+function remote(){const k=++seq;api('simulate',{method:'POST',headers:J,body:JSON.stringify({nodes:S.nodes,edges:S.edges})}).then(r=>{if(k===seq){S.sim=r;panel()}}).catch(()=>{});api('analyze',{method:'POST',headers:J,body:JSON.stringify({nodes:S.nodes,edges:S.edges})}).then(r=>{if(k!==seq)return;S.srv={score:r.score,G:r.good,F:r.findings.map(f=>({...f,n:nb(f.node_id)})).filter(f=>f.n)};drawNodes();panel()}).catch(()=>{})}
+function lst(){api('architectures').then(a=>{$('#sl').innerHTML='<option value="">Load saved</option>'+a.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}).catch(()=>{})}
+const flash=t=>{$('#sv').textContent=t;setTimeout(()=>$('#sv').textContent='Save to server',1800)};
+$('#sv').onclick=()=>api('architectures',{method:'POST',headers:J,body:JSON.stringify({name:'Architecture '+new Date().toLocaleString(),model:{nodes:S.nodes,edges:S.edges}})}).then(()=>{flash('Saved');lst()}).catch(()=>flash('No backend'));
+$('#sl').onchange=e=>{const id=e.target.value;e.target.value='';if(id)api('architectures/'+id).then(m=>{S.nodes=m.nodes;S.edges=m.edges;uid=Math.max(0,...S.nodes.map(n=>+n.id.slice(1)||0))+1;S.sel=null;refresh()}).catch(()=>{})};
+try{const s=JSON.parse(localStorage.getItem('cloudsim'));if(s&&s.nodes&&s.nodes.length){S.nodes=s.nodes;S.edges=s.edges;uid=s.uid||100;refresh()}else load('insecure')}catch(e){load('insecure')}
+lst()
+</script>
+</body>
+</html>
